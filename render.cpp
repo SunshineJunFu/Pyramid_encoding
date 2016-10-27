@@ -22,9 +22,9 @@ int axes = 1;       //  Display axes
 int mode = 0;       //  Projection mode
 int th = 0;         //  Azimuth of view angle
 int ph = 0;         //  Elevation of view angle
-int fov = 80;       //  Field of view (for perspective)
+int fov = 100;       //  Field of view (for perspective)
 double asp = 1;     //  Aspect ratio
-double dim = 1200;   //  Size of world
+double dim = 600;   //  Size of world
 
 //  Macro for sin & cos in degrees
 #define Cos(th) cos(3.1415927/180*(th))
@@ -60,10 +60,13 @@ static void Project()
 	glLoadIdentity();
 	//  Perspective transformation
 	if (mode)
-		gluPerspective(fov, asp, dim / 4, 4 * dim);
+		glOrtho(-asp*dim, +asp*dim, -dim, +dim, -dim, +dim);
+		//gluPerspective(fov, asp, 0.0f, 2.0f);
+		//gluPerspective(fov, asp, dim / 4, 4 * dim);
 	//  Orthogonal projection
 	else
-		glOrtho(-asp*dim, +asp*dim, -dim, +dim, -dim, +dim);
+		
+		gluPerspective(fov, asp, 0.0f, 1.0f);
 	//  Switch to manipulating the model matrix
 	glMatrixMode(GL_MODELVIEW);
 	//  Undo previous transformations
@@ -78,7 +81,7 @@ static void pyramid(double x, double y, double z,
 
 	//  Offset
 //	glTranslated(x, y, z);
-	glRotated(th, 0, 1, 0);
+//	glRotated(th, 0, 1, 0);
 	glScaled(dx, dy, dz);
 
 	//激活纹理功能
@@ -86,48 +89,68 @@ static void pyramid(double x, double y, double z,
 
 	// Front Face  
 	//提供纹理坐标
-
+	GLfloat t = 2*sqrtf(2.0f) - 1;
+	GLfloat d = sqrtf(2.0f)/2;
+	
 	glBegin(GL_TRIANGLES);           // Begin drawing the pyramid with 4 triangles
-//	glTexCoord2f(0.0f, 0.0f); glVertex3f(-1.0f, -1.0f, 1.0f);
-	// Front
-	//glColor3f(1, 0.55, 0.34);
-	glTexCoord2f(0.0f, 1.0f); glVertex3f(0.0f, 1.8284f, 0.0f);
-	//glColor3f(0.730, 0.55, 0.34);
+
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(0.0f, t, 0.0f);
 	glTexCoord2f(0.0f, 0.5f); glVertex3f(-1.0f, -1.0f, 1.0f);
 	glTexCoord2f(0.5f, 1.0f); glVertex3f(1.0f, -1.0f, 1.0f);
 
-	// Right
-//	glColor3f(1, 0.55, 0.34);
-	glTexCoord2f(1.0f, 1.0f); glVertex3f(0.0f, 1.8284f, 0.0f);
-//	glColor3f(0.730, 0.55, 0.34);
+
+	glTexCoord2f(1.0f, 1.0f); glVertex3f(0.0f, t, 0.0f);
 	glTexCoord2f(0.5f, 1.0f); glVertex3f(1.0f, -1.0f, 1.0f);
 	glTexCoord2f(1.0f, 0.5f); glVertex3f(1.0f, -1.0f, -1.0f);
 
-	// Back
-	//glColor3f(1, 0.55, 0.34);
-	glTexCoord2f(1.0f, 0.0f); glVertex3f(0.0f, 1.8284f, 0.0f);
-//	glColor3f(0.730, 0.55, 0.34);
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(0.0f, t, 0.0f);
 	glTexCoord2f(1.0f, 0.5f); glVertex3f(1.0f, -1.0f, -1.0f);
 	glTexCoord2f(0.5f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
 
-	// Left
-	//glColor3f(1, 0.55, 0.34);
-	glTexCoord2f(0.0f, 0.0f); glVertex3f(0.0f, 1.8284f, 0.0f);
-	//glColor3f(0.730, 0.55, 0.34);
+
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(0.0f, t, 0.0f);
 	glTexCoord2f(0.5f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
 	glTexCoord2f(0.0f, 0.5f); glVertex3f(-1.0f, -1.0f, 1.0f);
 
 	glEnd();   // Done drawing the pyramid
 
 	glBegin(GL_QUADS);
-	// Bottom
-//	glColor3f(0.730, 0.55, 0.34);
 	glTexCoord2f(0.0f, 0.5f); glVertex3f(-1.0f, -1.0f, 1.0f);
 	glTexCoord2f(0.5f, 0.0f); glVertex3f(-1.0f, -1.0f, -1.0f);
 	glTexCoord2f(1.0f, 0.5f); glVertex3f(1.0f, -1.0f, -1.0f);
 	glTexCoord2f(0.5f, 1.0f); glVertex3f(1.0f, -1.0f, 1.0f);
 	glEnd();
+	
+	/*
+	glBegin(GL_TRIANGLES);           // Begin drawing the pyramid with 4 triangles
 
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(0.0f, 0.0f, 2.0f-d);
+	glTexCoord2f(0.0f, 0.5f); glVertex3f(0, 1.0f, -d);
+	glTexCoord2f(0.5f, 1.0f); glVertex3f(1.0f, 0.0f, -d);
+
+
+	glTexCoord2f(1.0f, 1.0f); glVertex3f(0.0f, 0.0f, 2.0f-d);
+	glTexCoord2f(0.5f, 1.0f); glVertex3f(1.0f, 0.0f, -d);
+	glTexCoord2f(1.0f, 0.5f); glVertex3f(-1.0f, 0.0f, -d);
+
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(0.0f, 0.0f, 2.0f - d);
+	glTexCoord2f(1.0f, 0.5f); glVertex3f(0.0f, -1.0f, -d);
+	glTexCoord2f(0.5f, 0.0f); glVertex3f(-1.0f, 0.0f, -d);
+
+
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(0.0f, 0.0f, 2.0f-d);
+	glTexCoord2f(0.5f, 0.0f); glVertex3f(-1.0f, 0.0f, -d);
+	glTexCoord2f(0.0f, 0.5f); glVertex3f(0.0f, 1.0f, -d);
+
+	glEnd();   // Done drawing the pyramid
+
+	glBegin(GL_QUADS);
+	glTexCoord2f(0.0f, 0.5f); glVertex3f(0.0f, 1.0f, -d);
+	glTexCoord2f(0.5f, 0.0f); glVertex3f(-1.0f, 0.0f, -d);
+	glTexCoord2f(1.0f, 0.5f); glVertex3f(0.0f, -1.0f, -d);
+	glTexCoord2f(0.5f, 1.0f); glVertex3f(1.0f, 0.0f, -d);
+	glEnd();
+	*/
 	glPopMatrix();
 }
 
@@ -242,7 +265,7 @@ static void cube(double x, double y, double z,
 */
 void display()
 {
-	const double len = 2000;  //  Length of axes
+	const double len = 1200;  //  Length of axes
 	//  Erase the window and the depth buffer
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -253,10 +276,12 @@ void display()
 	//  Perspective - set eye position
 	if (mode)
 	{
-		double Ex = -2 * dim*Sin(th)*Cos(ph);
+		glRotatef(ph, 1, 0, 0);
+		glRotatef(th, 0, 1, 0);
+		/*double Ex = -2 * dim*Sin(th)*Cos(ph);
 		double Ey = +2 * dim        *Sin(ph);
 		double Ez = +2 * dim*Cos(th)*Cos(ph);
-		gluLookAt(Ex, Ey, Ez, 0, 0, 0, 0, Cos(ph), 0);
+		gluLookAt(Ex, Ey, Ez, 0, 0, 0, 0, Cos(ph), 0);*/
 	}
 	//  Orthogonal - set world orientation
 	else
@@ -264,6 +289,7 @@ void display()
 		glRotatef(ph, 1, 0, 0);
 		glRotatef(th, 0, 1, 0);
 	}
+	//glTranslatef(0, 0, 0);
 	//  Draw cubes
 	// for (i=-1;i<=1;i++)
 	//    for (j=-1;j<=1;j++)
@@ -272,7 +298,7 @@ void display()
 
 
 	// drawing the 3 great pyramids of Egypt
-	pyramid(0, 0, 0, 230.124, 138.684, 230.124, 0);
+	pyramid(0, 0, 0, 300, 300, 300, 0);
 
 //	pyramid(300, 0, 115, 30, 30, 30, 0);
 //	pyramid(300, 0, 20, 30, 30, 30, 0);
@@ -291,7 +317,7 @@ void display()
 //	pyramid(-800, 0, 1200, 30, 30, 30, 0);
 //	pyramid(0, 0, 0, 1, 1, 1, 0);
 	//  Draw axes
-	glColor3f(1, 1, 1);
+//	glColor3f(1, 1, 1);
 	if (axes)
 	{
 		glBegin(GL_LINES);
@@ -458,7 +484,7 @@ int main(int argc, char* argv[])
 	glutInit(&argc, argv);
 	//  Request double buffered, true color window with Z buffering at 600x600
 	glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
-	glutInitWindowSize(600, 600);
+	glutInitWindowSize(800, 800);
 	glutCreateWindow("Egyptian Pyramids");
 	// background color
 	glClearColor(0.95, 0.810, 0.4, 0.0);

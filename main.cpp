@@ -1,6 +1,6 @@
 #include <opencv2\opencv.hpp>
 #include <string>
-#define ROTA 0
+#define ROTA 1
 int sign(double x)
 {
 	if (x == 0)
@@ -54,8 +54,8 @@ int main()
 				double d = sqrt(bx*bx + by*by);
 				double Vz = abs(sqrt(2) / 2 - d) / (sqrt(2) / 2) *length;
 
-				double v[3] = { (abs(Vz / length) + (px / (pyramidwidth / 2)))*abs((Vz / length) - 1), 
-					((py / (pyramidheight/2)) - abs(Vz / length))*abs((Vz / length) - 1), 
+				double v[3] = { (abs(Vz / length) + (px / (pyramidwidth / 2))),//*abs((Vz / length) - 1), 
+					((py / (pyramidheight/2)) - abs(Vz / length)),//*abs((Vz / length) - 1), 
 					Vz - distant };
 #if ROTA
 				double u[3] = { v[0] * m[0][0] + v[1] * m[1][0] + v[2] * m[2][0], v[0] * m[0][1] + v[1] * m[1][1] + v[2] * m[2][1], v[0] * m[0][2] + v[1] * m[1][2] + v[2] * m[2][2] };
@@ -99,8 +99,8 @@ int main()
 				double d = sqrt(bx*bx + by*by);
 				double Vz = abs(sqrt(2) / 2 - d) / (sqrt(2) / 2) *length;
 
-				double v[3] = { ((px / (pyramidwidth / 2)) - abs(Vz / length))*abs((Vz / length) - 1), 
-					((py / (pyramidheight / 2)) + abs(Vz / length))*abs((Vz / length) - 1), 
+				double v[3] = { ((px / (pyramidwidth / 2)) - abs(Vz / length)),//*abs((Vz / length) - 1), 
+					((py / (pyramidheight / 2)) + abs(Vz / length)),//*abs((Vz / length) - 1), 
 					Vz - distant };
 			/*	double v[3] = { (abs(Vz / length) + (px / (pyramidwidth / 2)))*abs((Vz / length) - 1), 
 					((py / (pyramidheight/2)) - abs(Vz / length))*abs((Vz / length) - 1), 
@@ -148,8 +148,8 @@ int main()
 				double d = sqrt(bx*bx + by*by);
 				double Vz = abs(sqrt(2) / 2 - d) / (sqrt(2) / 2) *length;
 
-				double v[3] = { ((px / (pyramidwidth / 2)) - abs(Vz / length))*abs((Vz / length) - 1),
-					((py / (pyramidheight / 2)) - abs(Vz / length))*abs((Vz / length) - 1), 
+				double v[3] = { ((px / (pyramidwidth / 2)) - abs(Vz / length)),//*abs((Vz / length) - 1),
+					((py / (pyramidheight / 2)) - abs(Vz / length)),//*abs((Vz / length) - 1), 
 					Vz - distant };
 #if ROTA
 				double u[3] = { v[0] * m[0][0] + v[1] * m[1][0] + v[2] * m[2][0], v[0] * m[0][1] + v[1] * m[1][1] + v[2] * m[2][1], v[0] * m[0][2] + v[1] * m[1][2] + v[2] * m[2][2] };
@@ -193,8 +193,8 @@ int main()
 				double d = sqrt(bx*bx + by*by);
 				double Vz = abs(sqrt(2) / 2 - d) / (sqrt(2) / 2) *length;
 
-				double v[3] = { ((px / (pyramidwidth / 2)) + abs(Vz / length))*abs((Vz / length) - 1), 
-					((py / (pyramidheight / 2)) + abs(Vz / length))*abs((Vz / length) - 1), 
+				double v[3] = { ((px / (pyramidwidth / 2)) + abs(Vz / length)),//*abs((Vz / length) - 1), 
+					((py / (pyramidheight / 2)) + abs(Vz / length)),//*abs((Vz / length) - 1), 
 					Vz - distant };
 #if ROTA
 				double u[3] = { v[0] * m[0][0] + v[1] * m[1][0] + v[2] * m[2][0], v[0] * m[0][1] + v[1] * m[1][1] + v[2] * m[2][1], v[0] * m[0][2] + v[1] * m[1][2] + v[2] * m[2][2] };
