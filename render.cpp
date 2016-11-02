@@ -18,11 +18,11 @@
 #include <GL/glut.h>
 #endif
 GLuint  texture[1];
-int axes = 1;       //  Display axes
+int axes = 0;       //  Display axes
 int mode = 0;       //  Projection mode
 int th = 0;         //  Azimuth of view angle
 int ph = 0;         //  Elevation of view angle
-int fov = 100;       //  Field of view (for perspective)
+int fov = 90;       //  Field of view (for perspective)
 double asp = 1;     //  Aspect ratio
 double dim = 600;   //  Size of world
 
@@ -89,7 +89,7 @@ static void pyramid(double x, double y, double z,
 
 	// Front Face  
 	//提供纹理坐标
-	GLfloat t = 2*sqrtf(2.0f) - 1;
+	GLfloat t = 1;// 2 * sqrtf(2.0f) - 1;
 	GLfloat d = sqrtf(2.0f)/2;
 	
 	glBegin(GL_TRIANGLES);           // Begin drawing the pyramid with 4 triangles
@@ -338,7 +338,7 @@ void display()
 	}
 	//  Display parameters
 	//glWindowPos2i(5, 5);
-	Print("Angle=%d,%d  Dim=%.1f FOV=%d Projection=%s", th, ph, dim, fov, mode ? "Perpective" : "Orthogonal");
+	//Print("Angle=%d,%d  Dim=%.1f FOV=%d Projection=%s", th, ph, dim, fov, mode ? "Perpective" : "Orthogonal");
 	//  Render the scene and make it visible
 	glFlush();
 	glutSwapBuffers();
@@ -398,6 +398,13 @@ void key(unsigned char ch, int x, int y)
 		dim -= 10;
 	else if (ch == 'h' || ch == 'H')
 		dim += 10;
+	else if (ch == 'm')
+	{
+		if (mode == 1)
+			mode = 0;
+		else
+			mode = 1;
+	}
 	//printf("")
 
 	//  Reproject
@@ -444,6 +451,14 @@ int LoadGLTextures()
 		//指定纹理属性
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		
 	}
 
 	/*if (TextureImage[0])
