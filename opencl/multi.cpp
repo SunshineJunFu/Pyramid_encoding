@@ -1,5 +1,3 @@
-
-#if 1
 #include <time.h>
 #include <stdio.h>	
 #include <stdlib.h>
@@ -11,9 +9,28 @@
 #else
 #include <CL/cl.h>	
 #endif
-
+#define PERSPECTIVE_NUM 20
 #define MAX_SOURCE_SIZE (0x100000)	
 #define PI 3.14159f
+
+enum IndexName
+{
+	IDi = 0,
+	IDj,
+	IDpywidth,
+	IDpyheight,
+	IDeqwidth,
+	IDeqheight,
+	IDeqwidthstep,
+	IDpywidthstep,
+	IDnchannels,
+	IDk
+};
+
+void initialization(const int* constdata);
+int pyramid_opencl(int* constdata, char* eqdata, char* pydata[]);
+void release();
+
 const float vdistant = sqrt(2.0f) / 2;//view point
 const float tall = sqrt(2.0f);//
 
@@ -39,25 +56,10 @@ static cl_mem pydatamobj = NULL;
 static size_t global_item_size = 1;
 const size_t local_item_size = 1;
 
-enum IndexName
-{
-	IDi = 0,
-	IDj,
-	IDpywidth,
-	IDpyheight,
-	IDeqwidth,
-	IDeqheight,
-	IDeqwidthstep,
-	IDpywidthstep,
-	IDnchannels,
-	IDk
-};
-
 void initialization(const int* constdata)
 {
 	FILE *fp;
 	const char fileName[] = "E:\\ES_ALG_PyramidProjection\\trunk\\Pyramid_projection_opencl\\pyramidproject.cl";
-
 
 	/* Load kernel source file */
 	fp = fopen(fileName, "r");
@@ -81,15 +83,15 @@ void initialization(const int* constdata)
 
 
 	/* Create rota matrix*/
-	double dodecahedron[20][2] = {0.500000000000000, 0.116139763599385,		-0.500000000000000, 0.883860236400615,		0.500000000000000, 0.883860236400615,
+	double dodecahedron[PERSPECTIVE_NUM][2] = { 0.500000000000000, 0.116139763599385, -0.500000000000000, 0.883860236400615, 0.500000000000000, 0.883860236400615,
 		-0.500000000000000, 0.116139763599385,		0, 0.383860236400615,		-1, 0.616139763599385,		1, 0.383860236400615,		0, 0.616139763599385,
 		0.383860236400615, 0.500000000000000,		-0.616139763599385, 0.500000000000000,		-0.383860236400615, 0.500000000000000,
 		0.616139763599385, 0.500000000000000,		0.250000000000000, 0.304086723984696,		-0.750000000000000, 0.695913276015304,
 		0.250000000000000, 0.695913276015304,		-0.750000000000000, 0.304086723984696,		-0.250000000000000, 0.304086723984696,
 		0.750000000000000, 0.695913276015304,		-0.250000000000000, 0.695913276015304,		0.750000000000000, 0.304086723984696	};
 
-	float rotamatrix20[180] = { 0 };
-	for (int i = 0; i < 20; ++i)
+	float rotamatrix20[PERSPECTIVE_NUM*9] = { 0 };
+	for (int i = 0; i < PERSPECTIVE_NUM; ++i)
 	{
 		float Euler[3] = { -PI*dodecahedron[i][1], 0.0f, PI * dodecahedron[i][0] }; //pry
 		float rotamatrix[9] = { cos(Euler[1])*cos(Euler[2]), -cos(Euler[1])*sin(Euler[2]), sin(Euler[1]),
@@ -110,7 +112,7 @@ void initialization(const int* constdata)
 
 
 	/* Copy input data to the memory buffer */
-	ret = clEnqueueWriteBuffer(command_queue, rotamatrixmobj, CL_TRUE, 0, 180 * sizeof(float), rotamatrix20, 0, NULL, NULL);
+	ret = clEnqueueWriteBuffer(command_queue, rotamatrixmobj, CL_TRUE, 0, PERSPECTIVE_NUM * 9 * sizeof(float), rotamatrix20, 0, NULL, NULL);
 	ret = clEnqueueWriteBuffer(command_queue, constdatamobj, CL_TRUE, 0, 10 * sizeof(int), constdata, 0, NULL, NULL);
 
 	/* Create kernel program from source file*/
@@ -126,7 +128,7 @@ void initialization(const int* constdata)
 	ret = clSetKernelArg(kernel, 3, sizeof(cl_mem), (void *)&rotamatrixmobj);
 	ret = clSetKernelArg(kernel, 0, sizeof(cl_mem), (void *)&eqdatamobj);
 
-	global_item_size = constdata[IDpyheight]*constdata[IDpywidth] * 20;
+	global_item_size = constdata[IDpyheight] * constdata[IDpywidth] * PERSPECTIVE_NUM;
 
 	return;
 }
@@ -149,26 +151,8 @@ void release()
 	return;
 }
 
-void display(int w, int h, int depth, int nchannels)
-{
-	/* display result */
-	//IplImage *eqimg = cvLoadImage("eq.jpeg", CV_LOAD_IMAGE_UNCHANGED);
-	IplImage* pyramidimg = cvCreateImage(cvSize(w, h), depth, nchannels);
-	std::string fn;
-	for (int i = 0; i < 20; ++i)
-	{
-		fn = "pyramid" + std::to_string(i) + ".jpg";
-		ret = clEnqueueReadBuffer(command_queue, pydatamobj, CL_TRUE,
-			w * h * nchannels * sizeof(unsigned char) * i,
-			w * h * nchannels * sizeof(unsigned char), pyramidimg->imageData, 0, NULL, NULL);
-		cvShowImage("pyramid", pyramidimg);
-		cvSaveImage(fn.c_str(), pyramidimg);
-		cvWaitKey(0);
-	}
-	return;
-}
 
-int pyramid_opencl(int* constdata, char* eqdata, char* pydata)
+int pyramid_opencl(int* constdata, char* eqdata, char* pydata[])
 {
 	/* Write eq buffer */
 	ret = clEnqueueWriteBuffer(command_queue, eqdatamobj, CL_TRUE, 0, constdata[IDeqwidth] * constdata[IDeqheight] * constdata[IDnchannels] * sizeof(unsigned char), eqdata, 0, NULL, NULL);
@@ -177,11 +161,13 @@ int pyramid_opencl(int* constdata, char* eqdata, char* pydata)
 
 	ret = clEnqueueNDRangeKernel(command_queue, kernel, 1, NULL,
 		&global_item_size, &local_item_size, 0, NULL, NULL);
-	//ret = clEnqueueReadBuffer(command_queue, constdatamobj, CL_TRUE, 0, 10 * sizeof(int), constdata, 0, NULL, NULL);
 	
 	/* Transfer result to host */
-	ret = clEnqueueReadBuffer(command_queue, pydatamobj, CL_TRUE,0,
-		constdata[IDpywidth] * constdata[IDpyheight] * constdata[IDnchannels] * sizeof(unsigned char), pydata, 0, NULL, NULL);
+	for (int i = 0; i < PERSPECTIVE_NUM; ++i)
+	{
+		ret = clEnqueueReadBuffer(command_queue, pydatamobj, CL_TRUE, constdata[IDpywidth] * constdata[IDpyheight] * constdata[IDnchannels] * sizeof(unsigned char)*i,
+			constdata[IDpywidth] * constdata[IDpyheight] * constdata[IDnchannels] * sizeof(unsigned char), pydata[i], 0, NULL, NULL);
+	}
 	time_t end = clock();
 	printf("the running time is : %f\n", double(end - start) / CLOCKS_PER_SEC);
 
@@ -209,10 +195,16 @@ int main()
 	pyheight *= 4;
 	pywidth *= 4;
 
-	int unit = pyheight / 2;
-	float a = (float)pyheight / pywidth; //slope 
-	IplImage* pyramidimg = cvCreateImage(cvSize(pywidth, pyheight), eqimg->depth, eqimg->nChannels);
+	//创建20幅图
+	char* pyimg_data[PERSPECTIVE_NUM];
+	IplImage* pyramidimg[PERSPECTIVE_NUM];
+	
+	for (int i = 0; i < PERSPECTIVE_NUM; ++i)
+	{
+		pyramidimg[i] = cvCreateImage(cvSize(pywidth, pyheight), eqimg->depth, eqimg->nChannels);
+		pyimg_data[i] = pyramidimg[i]->imageData;
 
+	}
 	int *constdata;
 	constdata = (int *)malloc(10 * sizeof(int));
 	constdata[0] = constdata[1] = constdata[9] = 0;
@@ -221,24 +213,31 @@ int main()
 	constdata[4] = eqwidth;
 	constdata[5] = eqheight;
 	constdata[6] = eqwidthstep;
-	constdata[7] = pyramidimg->widthStep;
+	constdata[7] = pyramidimg[0]->widthStep;
 	constdata[8] = eqnchannels;
 	//函数接口
-
+	// 初始化
 	initialization(constdata);
 
-	pyramid_opencl(constdata, eqimg->imageData, pyramidimg->imageData);
-
-	display(pyramidimg->width, pyramidimg->height, pyramidimg->depth, pyramidimg->nChannels);
+	/* eq layout transform into pyramid format
+	输入：constdata是一个常量数组，包括图像高宽，通道数
+		eq->imgdata是eq图像数据首地址
+	输出：pyimg_data是一个大小为20的数值指针，指向输出的20幅pyramid*/
+	//while (1)
+	{
+		pyramid_opencl(constdata, eqimg->imageData, pyimg_data);
+	}
+	//display and save pyimg_data result
+	for (int i = 0; i < PERSPECTIVE_NUM; ++i)
+	{
+		std::string fn = "pyramid" + std::to_string(i) + ".jpg";
+		cvShowImage("pyramid", pyramidimg[i]);
+		cvSaveImage(fn.c_str(), pyramidimg[i]);
+		cvWaitKey(0);
+	}
 
 	release();
 
 	free(constdata);
-	//cvShowImage("pyramid", pyramidimg);
-	//cvSaveImage("pyramid.jpg", pyramidimg);
-	//cvWaitKey(0);
-	
 	return 0;
 }
-
-#endif
